@@ -51,7 +51,10 @@ jobs:
 
     - name: Build PHAR archive
       if:   ${{ !startsWith(github.ref, 'refs/tags/') }}
-      run: php pss app:build --build-version=master
+      run: php pss app:build --build-version=$(git rev-parse --short "$GITHUB_SHA")
+
+    - name: Rename phar
+      run: mv builds/pss builds/pss.phar
 
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v2.2.4
