@@ -37,8 +37,8 @@ class BuildDockerImagesCommand extends Command
     public function handle(BuildDockerImageAction $builder, RunDockerContainerAction $runner)
     {
         collect([
-            'ghcr.io/kduma-oss/cli-pdf-scan-splitter-docker-pdf-page-extractor' => base_path('bin/pdf-page-extractor/'),
-            'ghcr.io/kduma-oss/cli-pdf-scan-splitter-docker-barcode-scanner' => base_path('bin/barcode-scanner/'),
+            'ghcr.io/kduma-oss/cli-pdf-scan-splitter/pdf-page-extractor:master' => base_path('bin/pdf-page-extractor/'),
+            'ghcr.io/kduma-oss/cli-pdf-scan-splitter/barcode-scanner:master' => base_path('bin/barcode-scanner/'),
         ])->each(function ($path, $tag) use ($builder, $runner) {
             $this->info($builder->getCommand($tag, $path));
             $builder->execute($tag, $path);

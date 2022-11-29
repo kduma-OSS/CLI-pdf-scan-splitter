@@ -31,12 +31,12 @@ class PdfPagesSplitterAction
             ->runDockerContainerAction
             ->withTemporaryDirectory($temporaryDirectory);
 
-        $action->execute(dockerImageName: 'ghcr.io/kduma-oss/cli-pdf-scan-splitter-docker-pdf-page-extractor:master',output: $output, return: $return);
+        $action->execute(dockerImageName: 'ghcr.io/kduma-oss/cli-pdf-scan-splitter/pdf-page-extractor:master',output: $output, return: $return);
 
         if (0 != $return) {
             $temporaryDirectory->delete();
             throw new PdfPageContentsExtractorException(
-                command: $action->getCommand(dockerImageName: 'ghcr.io/kduma-oss/cli-pdf-scan-splitter-docker-pdf-page-extractor:master'),
+                command: $action->getCommand(dockerImageName: 'ghcr.io/kduma-oss/cli-pdf-scan-splitter/pdf-page-extractor:master'),
                 code: $return,
                 output: $output,
             );
