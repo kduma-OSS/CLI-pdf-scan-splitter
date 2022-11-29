@@ -3,11 +3,14 @@
 namespace App\Commands;
 
 use App\Actions\Tools\BuildDockerImageAction;
+use App\Actions\Tools\GetsDockerImageTag;
 use App\Actions\Tools\RunDockerContainerAction;
 use Illuminate\Console\Command;
 
 class BuildDockerImagesCommand extends Command
 {
+    use GetsDockerImageTag;
+
     /**
      * The name and signature of the console command.
      *
@@ -36,9 +39,15 @@ class BuildDockerImagesCommand extends Command
      */
     public function handle(BuildDockerImageAction $builder, RunDockerContainerAction $runner)
     {
+        $this->info('Docker tag: '.$this->getDockerBranch());
+        if($this->isPhar()) {
+            $this->error('This command is not available when run from phar archive');
+            return 1;
+        }
+
         collect([
-            'ghcr.io/kduma-oss/cli-pdf-scan-splitter/pdf-page-extractor:master' => base_path('bin/pdf-page-extractor/'),
-            'ghcr.io/kduma-oss/cli-pdf-scan-splitter/barcode-scanner:master' => base_path('bin/barcode-scanner/'),
+            'ghcr.io/kduma-oss/cli-pdf-scan-splitter/pdf-page-extractor' => base_path('bin/pdf-page-extractor/'),
+            'ghcr.io/kduma-oss/cli-pdf-scan-splitter/barcode-scanner' => base_path('bin/barcode-scanner/'),
         ])->each(function ($path, $tag) use ($builder, $runner) {
             $this->info($builder->getCommand($tag, $path));
             $builder->execute($tag, $path);

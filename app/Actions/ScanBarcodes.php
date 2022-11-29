@@ -28,7 +28,7 @@ class ScanBarcodes
             ->runDockerContainerAction
             ->withTemporaryDirectory($temporaryDirectory);
 
-        $action->execute(dockerImageName: 'ghcr.io/kduma-oss/cli-pdf-scan-splitter/barcode-scanner:master', output: $output, return: $return);
+        $action->execute(dockerImageName: 'ghcr.io/kduma-oss/cli-pdf-scan-splitter/barcode-scanner', output: $output, return: $return);
 
         if (0 != $return) {
             $temporaryDirectory->delete();
@@ -37,7 +37,7 @@ class ScanBarcodes
                 return collect();
 
             throw new PdfPageContentsExtractorException(
-                command: $action->getCommand(dockerImageName: 'ghcr.io/kduma-oss/cli-pdf-scan-splitter/barcode-scanner:master'),
+                command: $action->getCommand(dockerImageName: 'ghcr.io/kduma-oss/cli-pdf-scan-splitter/barcode-scanner'),
                 code: $return,
                 output: $output,
             );

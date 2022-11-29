@@ -2,15 +2,11 @@
 
 namespace App\Actions\Tools;
 
-use Phar;
 use Spatie\TemporaryDirectory\TemporaryDirectory;
 
 class TemporaryDirectoryCreatorAction
 {
-    protected function isPhar(): bool
-    {
-        return strlen(Phar::running()) > 0;
-    }
+    use DetectsPharArchives;
 
     public function get(): TemporaryDirectory
     {

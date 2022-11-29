@@ -2,11 +2,12 @@
 
 namespace App\Actions\Tools;
 
-use Illuminate\Support\Str;
 use Spatie\TemporaryDirectory\TemporaryDirectory;
 
 class RunDockerContainerAction
 {
+    use GetsDockerImageTag;
+
     private TemporaryDirectory|string|null $temporaryDirectory = null;
     private ?string $name = null;
 
@@ -30,7 +31,7 @@ class RunDockerContainerAction
     public function execute(string $dockerImageName, string $arguments = '', array &$output = null, int &$return = null): string
     {
         $command = $this->getCommand($dockerImageName, arguments: $arguments, interactive: false);
-
+        dump($command);
         return exec($command, $output, $return);
     }
 
@@ -67,7 +68,7 @@ class RunDockerContainerAction
         $command = sprintf(
             'docker run %s %s %s 2>&1',
             $options,
-            escapeshellarg($dockerImageName),
+            escapeshellarg($this->getImageTag($dockerImageName)),
             $arguments
         );
         return $command;
