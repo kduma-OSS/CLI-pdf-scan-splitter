@@ -26,7 +26,7 @@ return [
     |
     */
 
-    'version' => app('git.version'),
+    'version' => app('git.version') != 'unreleased' ? app('git.version') : \Composer\InstalledVersions::getPrettyVersion('kduma/pdf-scan-splitter-tool'),
 
     /*
     |--------------------------------------------------------------------------
