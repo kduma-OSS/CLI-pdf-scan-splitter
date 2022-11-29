@@ -13,3 +13,10 @@ If there is multiple pages with the same barcode, the pages are saved into a fil
 **WARNING: Files already existing in the output directory will be overwritten!**
 
 ```./pss process <output_dir> <pdf> [<pdf>...]```
+
+
+### composer setup
+
+```composer global require kduma/pdf-scan-splitter-tool```
+
+Tool will be available globally as `pss` command.
