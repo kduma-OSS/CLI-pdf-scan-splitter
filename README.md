@@ -20,3 +20,9 @@ If there is multiple pages with the same barcode, the pages are saved into a fil
 ```composer global require kduma/pdf-scan-splitter-tool```
 
 Tool will be available globally as `pss` command.
+
+
+### Requirements
+
+This tool is based on `poppler-utils` and `zbar-tools` packages.
+Those pacgages are run in a docker container, so you don't need to install them on your system, **but you need to have docker installed**.
