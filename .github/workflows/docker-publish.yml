@@ -23,8 +23,10 @@ jobs:
       matrix:
         include:
           - dockerfile: ./bin/barcode-scanner/Dockerfile
+            context: ./bin/barcode-scanner
             image: ghcr.io/p-inz/CLI-pdf-scan-splitter-docker-barcode-scanner
           - dockerfile: ./bin/pdf-page-extractor/Dockerfile
+            context: ./bin/pdf-page-extractor
             image: ghcr.io/p-inz/CLI-pdf-scan-splitter-docker-pdf-page-extractor
 
     runs-on: ubuntu-latest
@@ -76,7 +78,7 @@ jobs:
         id: build-and-push
         uses: docker/build-push-action@ac9327eae2b366085ac7f6a2d02df8aa8ead720a
         with:
-          context: .
+          context: ${{ matrix.context }}
           file: ${{ matrix.dockerfile }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
