@@ -32,10 +32,10 @@ jobs:
         include:
           - dockerfile: ./bin/barcode-scanner/Dockerfile
             context: ./bin/barcode-scanner
-            image: ghcr.io/p-inz/CLI-pdf-scan-splitter/docker-barcode-scanner
+            image: ghcr.io/kduma-OSS/CLI-pdf-scan-splitter-docker-barcode-scanner
           - dockerfile: ./bin/pdf-page-extractor/Dockerfile
             context: ./bin/pdf-page-extractor
-            image: ghcr.io/p-inz/CLI-pdf-scan-splitter/docker-pdf-page-extractor
+            image: ghcr.io/kduma-OSS/CLI-pdf-scan-splitter-docker-pdf-page-extractor
 
     runs-on: ubuntu-latest
     permissions:
