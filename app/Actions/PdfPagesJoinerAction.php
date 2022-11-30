@@ -55,7 +55,7 @@ class PdfPagesJoinerAction
             );
         }
 
-        copy($temporaryDirectory->path('output.pdf'), $output_file->getPathname());
+        rename($temporaryDirectory->path('output.pdf'), $output_file->getPathname());
 
         $temporaryDirectory->delete();
     }
