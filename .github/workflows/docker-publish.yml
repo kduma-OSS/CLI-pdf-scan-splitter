@@ -39,6 +39,9 @@ jobs:
           - dockerfile: ./bin/pdf-page-joiner/Dockerfile
             context: ./bin/pdf-page-joiner
             image: ghcr.io/kduma-oss/cli-pdf-scan-splitter/pdf-page-joiner
+          - dockerfile: ./bin/image-pdf-converter/Dockerfile
+            context: ./bin/image-pdf-converter
+            image: ghcr.io/kduma-oss/cli-pdf-scan-splitter/image-pdf-converter
 
     runs-on: ubuntu-latest
     permissions:

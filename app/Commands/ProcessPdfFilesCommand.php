@@ -2,6 +2,7 @@
 
 namespace App\Commands;
 
+use App\Actions\ImageToPdfConvertAction;
 use App\Actions\PdfPagesJoinerAction;
 use App\Actions\PdfPagesSplitterAction;
 use App\Actions\ScanBarcodes;
@@ -36,7 +37,13 @@ class ProcessPdfFilesCommand extends Command
      *
      * @return mixed
      */
-    public function handle(PdfPagesSplitterAction $extractor, ScanBarcodes $scanner, TemporaryDirectoryCreatorAction $tempDirMaker, PdfPagesJoinerAction $joiner)
+    public function handle(
+        PdfPagesSplitterAction $extractor,
+        ScanBarcodes $scanner,
+        TemporaryDirectoryCreatorAction $tempDirMaker,
+        PdfPagesJoinerAction $joiner,
+        ImageToPdfConvertAction $converter
+    )
     {
         $inputs = collect($this->argument('pdf'))
             ->map(fn($path) => realpath($path))
@@ -58,6 +65,24 @@ class ProcessPdfFilesCommand extends Command
 
         $temporaryInputsDirectory = $tempDirMaker->create();
         $temporaryOutputDirectory = $tempDirMaker->create();
+
+        $inputs = $inputs->map(function(SplFileInfo $input_file) use ($converter, $temporaryInputsDirectory) {
+            if($input_file->getExtension() === 'pdf')
+                return $input_file;
+
+            switch ($input_file->getExtension()) {
+                case 'jpg':
+                case 'jpeg':
+                case 'png':
+                    $output_file = $temporaryInputsDirectory->path(Str::random(10).'.pdf');
+                    $converter->execute($input_file, $output_file);
+                    $this->info("File converted to PDF: {$input_file->getFilename()}");
+                    return new SplFileInfo($output_file);
+                default:
+                    $this->error("Unsupported file type: {$input_file->getFilename()}");
+                    return null;
+            }
+        })->filter();
 
         $outputs = [];
         $this->info("Extracting pages from PDF files");
