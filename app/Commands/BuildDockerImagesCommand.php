@@ -49,6 +49,7 @@ class BuildDockerImagesCommand extends Command
             'ghcr.io/kduma-oss/cli-pdf-scan-splitter/pdf-page-extractor' => base_path('bin/pdf-page-extractor/'),
             'ghcr.io/kduma-oss/cli-pdf-scan-splitter/pdf-page-joiner' => base_path('bin/pdf-page-joiner/'),
             'ghcr.io/kduma-oss/cli-pdf-scan-splitter/barcode-scanner' => base_path('bin/barcode-scanner/'),
+            'ghcr.io/kduma-oss/cli-pdf-scan-splitter/image-pdf-converter' => base_path('bin/image-pdf-converter/'),
         ])->each(function ($path, $tag) use ($builder, $runner) {
             $this->info($builder->getCommand($tag, $path));
             $builder->execute($tag, $path);
