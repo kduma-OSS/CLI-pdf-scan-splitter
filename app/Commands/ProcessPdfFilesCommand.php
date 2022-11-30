@@ -124,7 +124,7 @@ class ProcessPdfFilesCommand extends Command
             $page_tags = $scanned
                 ->filter(fn($barcode) => $barcode['type'] == 'QR-Code')
                 ->map(function ($barcode) {
-                    if(false === preg_match('/^([0-9A-Za-z]+):(\\d+)(:(\\d+))?$/um', $barcode['value'])) {
+                    if(!preg_match('/^([0-9A-Za-z]+(@[0-9A-Za-z]+)?):(\\d+)(:(\\d+))?$/um', $barcode['value'])) {
                         return null;
                     }
                     [$id, $page, $count] = explode(':', $barcode['value'].':::');
