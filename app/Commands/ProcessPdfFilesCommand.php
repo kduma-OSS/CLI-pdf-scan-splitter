@@ -23,7 +23,7 @@ class ProcessPdfFilesCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'process {output_dir} {pdf*}';
+    protected $signature = 'process {output_dir} {pdf*} {--dpi=200}';
 
     /**
      * The description of the command.
@@ -109,7 +109,8 @@ class ProcessPdfFilesCommand extends Command
         $this->info("Scanning pages for barcodes");
         $this->withProgressBar($outputs, function (SplFileInfo $page) use ($temporaryOutputDirectory, $scanner, &$final, &$tagged) {
             $scanned = $scanner->execute(
-                input_file: $page
+                input_file: $page,
+                dpi: $this->option('dpi'),
             );
 
             $bc = $scanned->filter(fn($barcode) => $barcode['type'] == 'CODE-128');
