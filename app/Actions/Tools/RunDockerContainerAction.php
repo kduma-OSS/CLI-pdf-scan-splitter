@@ -31,7 +31,7 @@ class RunDockerContainerAction
     public function execute(string $dockerImageName, string $arguments = '', array &$output = null, int &$return = null): string
     {
         $command = $this->getCommand($dockerImageName, arguments: $arguments, interactive: false);
-        dump($command);
+
         return exec($command, $output, $return);
     }
 
