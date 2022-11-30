@@ -2,10 +2,12 @@
 
 namespace App\Commands;
 
+use App\Actions\PdfPagesJoinerAction;
 use App\Actions\PdfPagesSplitterAction;
 use App\Actions\ScanBarcodes;
 use App\Actions\Tools\TemporaryDirectoryCreatorAction;
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use LaravelZero\Framework\Commands\Command;
 use Spatie\TemporaryDirectory\TemporaryDirectory;
@@ -34,7 +36,7 @@ class ProcessPdfFilesCommand extends Command
      *
      * @return mixed
      */
-    public function handle(PdfPagesSplitterAction $extractor, ScanBarcodes $scanner, TemporaryDirectoryCreatorAction $tempDirMaker)
+    public function handle(PdfPagesSplitterAction $extractor, ScanBarcodes $scanner, TemporaryDirectoryCreatorAction $tempDirMaker, PdfPagesJoinerAction $joiner)
     {
         $inputs = collect($this->argument('pdf'))
             ->map(fn($path) => realpath($path))
@@ -66,7 +68,7 @@ class ProcessPdfFilesCommand extends Command
                 output_dir: $temporaryDirectory->path(),
             );
 
-            $file_hash = sha1($file->getRealPath());
+            $file_hash = sha1($file->getRealPath()).'_'.Str::random(8);
             foreach ($pages as $page) {
                 $outputs[] = $output = $temporaryInputsDirectory->path($file_hash.'-'.basename($page));
                 rename($page, $output);
@@ -76,15 +78,16 @@ class ProcessPdfFilesCommand extends Command
         });
 
         $final = [];
+        $tagged = collect([]);
         $outputs = collect($outputs)->map(fn($path) => new SplFileInfo($path));
         $this->newLine(2);
         $this->info("Scanning pages for barcodes");
-        $this->withProgressBar($outputs, function (SplFileInfo $page) use ($temporaryOutputDirectory, $scanner, &$final) {
-            $bc = $scanner->execute(
+        $this->withProgressBar($outputs, function (SplFileInfo $page) use ($temporaryOutputDirectory, $scanner, &$final, &$tagged) {
+            $scanned = $scanner->execute(
                 input_file: $page
             );
 
-            $bc = $bc->filter(fn($barcode) => $barcode['type'] == 'CODE-128');
+            $bc = $scanned->filter(fn($barcode) => $barcode['type'] == 'CODE-128');
             if($bc->count() > 0) {
                 $bc = $bc->first();
                 $bc = $bc['value'];
@@ -92,9 +95,104 @@ class ProcessPdfFilesCommand extends Command
                 $bc = 'UNKNOWN';
             }
 
-            $final[] = $output = $this->getOutputPath($temporaryOutputDirectory, $bc);
+            $page_tags = $scanned
+                ->filter(fn($barcode) => $barcode['type'] == 'QR-Code')
+                ->map(function ($barcode) {
+                    if(false === preg_match('/^([0-9A-Za-z]+):(\\d+)(:(\\d+))?$/um', $barcode['value'])) {
+                        return null;
+                    }
+                    [$id, $page, $count] = explode(':', $barcode['value'].':::');
+
+                    $barcode['tag'] = [
+                        'id' => $id != "" ? $id : null,
+                        'page' => $page != "" ? $page : null,
+                        'count' => $count != "" ? $count : null,
+                    ];
+
+                    return $barcode;
+                })
+                ->filter()
+                ->map(function ($barcode) use ($bc) {
+                    if(is_null($barcode['tag']['id'])) {
+                        $barcode['tag']['id'] = $bc;
+                    }
+
+                    return $barcode;
+                });
+
+            if($page_tags->count() > 0) {
+                $t = $page_tags->first();
+                $id = $t['tag']['id'];
+                $page_no = $t['tag']['page'];
+
+                if(!isset($tagged[$id])) {
+                    $tagged[$id] = collect();
+                }
+
+                if(!isset($tagged[$id][$page_no])) {
+                    $tagged[$id][$page_no] = collect();
+                }
+
+                $output = $this->getOutputPath($temporaryOutputDirectory, 'TG_'.$bc);
+
+                $tagged[$id][$page_no][] = [
+                    'file' => $output,
+                    'tag' => $t['tag'],
+                    'barcode' => $bc,
+                ];
+
+
+            } else {
+                $final[] = $output = $this->getOutputPath($temporaryOutputDirectory, $bc);
+            }
             rename($page, $output);
         });
+
+        if($tagged->count()) {
+            $this->newLine(2);
+            $errors = [];
+            $this->info("Processing multi-page documents");
+            $this->withProgressBar($tagged, function (Collection $tag_pages) use ($joiner, $temporaryOutputDirectory, &$errors, &$final) {
+                $tag_pages = $tag_pages->sortKeys();
+                $tag_name = $tag_pages->first()->first()['tag']['id'];
+
+                if($tag_pages->keys()->max() != $tag_pages->keys()->count()) {
+                    $errors[] = $tag_name.' has missing pages - last page is '.$tag_pages->keys()->max(). ' but there are '.$tag_pages->keys()->count().' pages!';
+                }
+
+                $tag_pages = $tag_pages->map(function (Collection $tag_page, $page_number) use ($tag_name, &$errors, &$final) {
+                    if($tag_page->count() > 1) {
+                        $errors[] = $tag_name.':'.$page_number.' has been scanned multiple times!';
+                    }
+
+                    $used = $tag_page->pop();
+
+                    foreach ($tag_page as $p) {
+                        $file = $p['file'];
+                        $new_file = pathinfo($file, PATHINFO_DIRNAME).DIRECTORY_SEPARATOR.'IGNORED_'.pathinfo($file, PATHINFO_FILENAME).'_'.$p['tag']['page'].'.'.pathinfo($file, PATHINFO_EXTENSION);
+                        $errors[] = $tag_name.':'.$page_number.' - ignored file placed at '.basename($new_file);
+
+                        $final[] = $new_file;
+                        rename($file, $new_file);
+                    }
+
+                    return $used;
+                });
+
+                $barcode = $tag_pages->first()['barcode'];
+
+
+                $joiner->execute(
+                    input_files: $tag_pages->pluck('file'),
+                    output_file: $output = $this->getOutputPath($temporaryOutputDirectory, $barcode),
+                );
+                $final[] = $output;
+            });
+            $this->newLine(2);
+            foreach ($errors as $error) {
+                $this->error($error);
+            }
+        }
 
         $this->newLine(2);
         $this->info("Moving files to output directory");

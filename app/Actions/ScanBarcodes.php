@@ -47,7 +47,7 @@ class ScanBarcodes
         $barcodes = collect(explode("\n", $barcodes))
             ->map(fn($barcode) => trim($barcode))
             ->filter(fn($barcode) => !empty($barcode))
-            ->map(fn($barcode) => explode(':', $barcode))
+            ->map(fn($barcode) => explode(':', $barcode, 2))
             ->map(fn($barcode) => [
                 'type' => $barcode[0],
                 'value' => $barcode[1],
