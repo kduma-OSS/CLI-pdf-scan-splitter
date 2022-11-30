@@ -15,7 +15,7 @@ class ScanBarcodes
         protected TemporaryDirectoryCreatorAction $tempDirMaker
     ) {}
 
-    public function execute(string|SplFileInfo $input_file): Collection
+    public function execute(string|SplFileInfo $input_file, int $dpi): Collection
     {
         if(is_string($input_file))
             $input_file = new SplFileInfo($input_file);
@@ -28,7 +28,7 @@ class ScanBarcodes
             ->runDockerContainerAction
             ->withTemporaryDirectory($temporaryDirectory);
 
-        $action->execute(dockerImageName: 'ghcr.io/kduma-oss/cli-pdf-scan-splitter/barcode-scanner', output: $output, return: $return);
+        $action->execute(dockerImageName: 'ghcr.io/kduma-oss/cli-pdf-scan-splitter/barcode-scanner', arguments: $dpi, output: $output, return: $return);
 
         if (0 != $return) {
             $temporaryDirectory->delete();
@@ -37,7 +37,7 @@ class ScanBarcodes
                 return collect();
 
             throw new PdfPageContentsExtractorException(
-                command: $action->getCommand(dockerImageName: 'ghcr.io/kduma-oss/cli-pdf-scan-splitter/barcode-scanner'),
+                command: $action->getCommand(dockerImageName: 'ghcr.io/kduma-oss/cli-pdf-scan-splitter/barcode-scanner', arguments: $dpi),
                 code: $return,
                 output: $output,
             );
