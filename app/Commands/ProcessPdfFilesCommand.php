@@ -161,6 +161,10 @@ class ProcessPdfFilesCommand extends Command
 
                 $output = $this->getOutputPath($temporaryOutputDirectory, 'TG_'.$bc);
 
+                if($bc == 'UNKNOWN' && preg_match('/^((T[0-9A-Za-z]{14}T)[0-9A-Za-z]*|([0-9A-Za-z]{14})[0-9A-Za-z]*|([0-9A-Za-z]*)@[0-9A-Za-z]*)$/usm', $id, $matches)) {
+                    $bc = $matches[4] ?? $matches[3] ?? $matches[2] ?? $matches[1];
+                }
+
                 $tagged[$id][$page_no][] = [
                     'file' => $output,
                     'tag' => $t['tag'],
