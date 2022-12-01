@@ -113,7 +113,10 @@ class ProcessPdfFilesCommand extends Command
                 dpi: $this->option('dpi'),
             );
 
-            $bc = $scanned->filter(fn($barcode) => $barcode['type'] == 'CODE-128');
+            $bc = $scanned
+                ->filter(fn($barcode) => $barcode['type'] == 'CODE-128')
+                ->filter(fn($barcode) => !preg_match('/^([0-9A-Za-z]+(@[0-9A-Za-z]+)?):(\\d+)(:(\\d+))?$/um', $barcode['value']));
+
             if($bc->count() > 0) {
                 $bc = $bc->first();
                 $bc = $bc['value'];
@@ -122,7 +125,7 @@ class ProcessPdfFilesCommand extends Command
             }
 
             $page_tags = $scanned
-                ->filter(fn($barcode) => $barcode['type'] == 'QR-Code')
+                ->filter(fn($barcode) => $barcode['type'] == 'QR-Code' || $barcode['type'] == 'CODE-128' && preg_match('/^([0-9A-Za-z]+(@[0-9A-Za-z]+)?):(\\d+)(:(\\d+))?$/um', $barcode['value']))
                 ->map(function ($barcode) {
                     if(!preg_match('/^([0-9A-Za-z]+(@[0-9A-Za-z]+)?):(\\d+)(:(\\d+))?$/um', $barcode['value'])) {
                         return null;
