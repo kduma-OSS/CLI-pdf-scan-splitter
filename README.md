@@ -2,6 +2,8 @@
 
 Scanned PDF files splitter and sorter based on barcode
 
+**Check full documentation on: https://opensource.duma.sh/apps/pdf-scan-splitter**
+
 ### `pss` tool
 
 This tool reads every PDF provided as an argument, splits every page into separate PDF and looks for a Code-128 barcode on each page. 
